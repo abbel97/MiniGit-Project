@@ -3,6 +3,7 @@
 
 A command line based version control system we built using C++.
 This is a lightweight version of Git, developed for our DSA final project.
+Detailed explanations have been added as comments to make the code easier to understand.
 
 ---
 
