@@ -1,8 +1,8 @@
 #include <iostream>
-#include <filesystem> //work with file and folders
-#include <fstream>  //helps to read from files or write to files 
+#include <filesystem>
+#include <fstream> 
 #include <ctime>
-#include <sstream> //for reading full file content into  a buffer
+#include <sstream> 
 #include <iomanip>
 #include <unordered_set>
 #include <unordered_map>
@@ -10,9 +10,9 @@
 namespace fl = std::filesystem;
 
 void init(){
-    fl::path mingit_repo = ".mingit"; // function that handles the init command
+    fl::path mingit_repo = ".mingit"; 
 
-    // We check if .mingit already exists
+    //Checking if .mingit already exists
     if(fl::exists(mingit_repo)){
         std::cout << "MinGit repository is already initialized. \n";
         return;
@@ -22,7 +22,8 @@ void init(){
     fl::create_directory(mingit_repo/ "objects");
     fl::create_directory(mingit_repo/ "refs");
 
-    std::ofstream head_file(mingit_repo/ "HEAD"); // creatng a head file that stores the current branch.
+    // creatng a head file that stores the current branch.
+    std::ofstream head_file(mingit_repo/ "HEAD"); 
     if(head_file){
         head_file << "ref: refs/main \n";
         head_file.close();
@@ -32,7 +33,7 @@ void init(){
 }
 
   // add commands with linked lists
- // It stores -> sthe name of file that's staged and a pointer to the next file in the list
+ // It stores -> the name of file that's staged and a pointer to the next file in the list
 struct FileNode{
     std::string filename;
     FileNode* next;
@@ -51,7 +52,7 @@ public:
     StagingArea(){
         head = nullptr;
     }
-    bool isStaged(const std::string& fname){ //Checking if the file is already in the staging list
+    bool isStaged(const std::string& fname){ 
         FileNode* temp = head;
         while(temp != nullptr){
             if(temp -> filename == fname){
@@ -63,7 +64,7 @@ public:
 
      }
 
-    void  addFile(const std::string& fname){  // Adds new file to the begining of linked list
+    void  addFile(const std::string& fname){ 
         if(isStaged(fname)){
             std::cout << "File" << fname << "' is already staged. \n";
             return;
@@ -79,7 +80,7 @@ public:
 
         std::cout << "Added '" << fname << "' to staging area. \n";
     }
-    void printStagedFiles(){  // Loops through the list and prints each staged file
+    void printStagedFiles(){  
         std::cout << "Currently staged files: \n";
         FileNode* temp = head;
         while(temp != nullptr){
@@ -93,13 +94,12 @@ public:
 
 };
 
-// Represents one commit(snapshot of our project)
 struct CommitNode{
     int commitID;
     std::string message;
     std::string timestamp;
     FileNode* files;
-    CommitNode* prev;  //pointer to the previous commit(linked lst)
+    CommitNode* prev; 
 
     CommitNode(int id, const std::string& msg, FileNode* stagedFiles, CommitNode* parent) : 
         commitID(id), message(msg), prev(parent), files(stagedFiles){
@@ -120,9 +120,6 @@ CommitNode* findCommitByID(CommitNode* head, int id){
     return nullptr;
 }
 
-//find the lowest common ancestor.
-//It walks backwards the commit history of Both branches , It finds the first commit that exist in
-//          both histories -> that's the common ancestor. 
 CommitNode* findLCA(CommitNode* a, CommitNode* b) {
     std::unordered_set<int> visited;
 
@@ -139,7 +136,6 @@ CommitNode* findLCA(CommitNode* a, CommitNode* b) {
     return nullptr;
 }
 
-//Helper function, given a filename and commit ID, it reconstructs the versioned filename
 std::string getFileContentAtCommit(const std::string& filename, int commitID) {
     std::string versionedFile = filename + "_" + std::to_string(commitID);
     std::ifstream src(".mingit/objects/" + versionedFile, std::ios::binary);
@@ -151,11 +147,9 @@ std::string getFileContentAtCommit(const std::string& filename, int commitID) {
     return buffer.str();
 }
 
-//Helper function, Splits file contents into lines, compare each line and prints line number for context.
 void printDiff(const std::string& filename, const std::string& content1, const std::string& content2) {
     std::cout << "Changes in " << filename << ":\n";
     
-   //Splites the first content into lines
     std::vector<std::string> lines1;
     std::istringstream stream1(content1);
     std::string line;
@@ -163,14 +157,12 @@ void printDiff(const std::string& filename, const std::string& content1, const s
         lines1.push_back(line);
     }
     
-    // Splits the second content into lines
     std::vector<std::string> lines2;
     std::istringstream stream2(content2);
     while (std::getline(stream2, line)) {
         lines2.push_back(line);
     }
     
-    //These check and comapers line by line
     size_t maxLines = std::max(lines1.size(), lines2.size());
     for (size_t i = 0; i < maxLines; i++) {
         std::string line1 = (i < lines1.size()) ? lines1[i] : "";
@@ -188,9 +180,9 @@ void printDiff(const std::string& filename, const std::string& content1, const s
 
 int main(){
     std::string command;
-    StagingArea staging; //Creating the staging system we'll interact with.
-    CommitNode* headCommit = nullptr;  //Points to the latest commit
-    int commitCounter = 0;       //Gives each commit a unique ID
+    StagingArea staging;.
+    CommitNode* headCommit = nullptr;
+    int commitCounter = 0;  
     std::cout << "Welcome to MinGit! \n";
 
     while(true){
@@ -216,14 +208,14 @@ int main(){
      std::cout << "Initialized empty MiniGit repository in .minigit/\n";
     }
 
-        // ADD COMMAND
-        else if(command == "add"){
+    // ADD COMMAND
+    else if(command == "add"){
         std::string filename;
         std::cin >> filename;
         staging.addFile(filename);
     }
     else if(command == "status"){
-        staging.printStagedFiles(); // prints the list of current staged files
+        staging.printStagedFiles(); 
     }
     else if(command == "exit"){
         break;
@@ -233,18 +225,17 @@ int main(){
     else if(command == "commit"){
         std::string dash, message;
         std::cin >> dash;
-        std::getline(std::cin, message); //captures the entire message even with sapces
+        std::getline(std::cin, message);
 
-        if(dash != "-m" || message.empty()){ //Checking error
+        if(dash != "-m" || message.empty()){ 
             std::cout << "Usage: commit -m \"your message\" \n";
             continue;
         }
-        if(staging.getHead() == nullptr){  //Checks if anything is staged and prevents commit with no files 
+        if(staging.getHead() == nullptr){  
             std::cout << "There are no files staged. Use 'add' before commiting. \n";
             continue;
         }
 
-        //Reads the entire content of the file and stores it as a string
         FileNode* current = staging.getHead();
         while(current != nullptr){
             std::ifstream src(current -> filename, std::ios::binary);
@@ -252,7 +243,6 @@ int main(){
             buffer << src.rdbuf();
             std::string filecontent = buffer.str();
 
-            //We save each file as a versioned copy using filename + commit ID
             std::string newName = current -> filename + "_" + std::to_string(commitCounter);
             std::ofstream dest(".mingit/objects/" + newName, std::ios::binary);
             dest << filecontent;
@@ -286,8 +276,9 @@ int main(){
             continue;
         }
 
-        CommitNode* current = headCommit; //Sets up a temporary pointer(current)
-        while(current != nullptr){ //loop through each commit in reverse(newest to oldest) using linked structure
+        //Sets up a temporary pointer(current)
+        CommitNode* current = headCommit; 
+        while(current != nullptr){ 
             std::cout << "Comit #" << current -> commitID <<"\n";
             std::cout << "Message: " << current -> message <<"\n";
             std::cout << "Date: " << current -> timestamp <<"\n";
@@ -305,17 +296,18 @@ int main(){
             std::cout << "Please write a branch name. \n";
             continue;
         }
-        if(headCommit == nullptr){  //This ensures there is a commit to branch from
+        if(headCommit == nullptr){ 
             std::cout << "At least you must make one commit before creating branches. \n";
             continue;
         }
-        std::string branchPath = ".mingit/refs/" + branchName; //This builds the branch to the new branch file
+        std::string branchPath = ".mingit/refs/" + branchName;
 
-        if(fl::exists(branchPath)){  //This prevents overwriting an existing branch with same name
+        if(fl::exists(branchPath)){  
             std::cout << "Branch '" << branchName << "' already exists. \n";
             continue;
         }
-        std::ofstream branchFile(branchPath);  // Creates .mingit/refs/<branchName> and writes the current commit ID into it
+        // Creates .mingit/refs/<branchName> and writes the current commit ID into it
+        std::ofstream branchFile(branchPath);  
         if(branchFile){
             branchFile << headCommit -> commitID << "\n";
             branchFile.close();
@@ -331,7 +323,7 @@ int main(){
     
        //CHECKOUT COMMAND
       else if(command == "checkout"){
-            std::string branchName;  //Captures the name of the branch user wants to switch
+            std::string branchName;  
             std::cin >> branchName;
 
             //Builds the path to the branch file
@@ -347,7 +339,6 @@ int main(){
             in >> targetID;
             in.close();
 
-            //This searches our commit history(linked list) to find the commit with that ID.
           CommitNode* targetCommit = findCommitByID(headCommit, targetID);
     if (targetCommit == nullptr) {
         std::cout << "Commit ID " << targetID << " not found in memory.\n";
@@ -403,7 +394,7 @@ int main(){
                 continue;
             }
 
-            //Here it loads the file contents from -> the base(LCA), the current branch(HEAD) and the target branch
+            //It loads the file contents from -> the base(LCA), the current branch(HEAD) and the target branch
             // It stores each file as filename -> content using unordered_map 
             std::unordered_map<std::string, std::string> lcaFiles;
             std::unordered_map<std::string, std::string> currentFiles;
@@ -425,21 +416,21 @@ int main(){
             loadFiles(headCommit, currentFiles);
             loadFiles(targetCommit, targetFiles);
 
-            std::unordered_set<std::string> allFiles;  // Builds a set of all file names from all three snapshots
+            std::unordered_set<std::string> allFiles; 
             for (auto& f : lcaFiles) allFiles.insert(f.first);
             for (auto& f : currentFiles) allFiles.insert(f.first);
             for (auto& f : targetFiles) allFiles.insert(f.first);
 
             //Conflict detection and writing files
             //For each file, it checks whether both branches modified it differently ->conflict
-            //   if only one branch changed it and saves the result to the disk and adds the file to staging
+            //if only one branch changed it and saves the result to the disk and adds the file to staging
             for (const auto& fname : allFiles) {
                 std::string base = lcaFiles[fname];
                 std::string curr = currentFiles[fname];
                 std::string targ = targetFiles[fname];
 
                 
-                if (curr != targ && (curr != base || targ != base)) { //if both branches made changes,  it counts as a conflict    
+                if (curr != targ && (curr != base || targ != base)) {  
                     std::cout << "CONFLICT: both modified " << fname << "\n";
                     std::ofstream out(fname);
                     out << "<<<<<<< HEAD\n" << curr << "\n=======\n" << targ << "\n>>>>>>>\n";
@@ -456,7 +447,6 @@ int main(){
                     staging.addFile(fname);
                 }
             }
-            //Merge is not auto-comitted, we resolve conflicts manually and then add + commit.
             std::cout << "Merge completed.Please resolve any conflicts shown above, then commit. \n";
         }
 
@@ -477,11 +467,10 @@ int main(){
         continue;
     }
     
-    std::unordered_set<std::string> allFiles; // Colledcts all filenames from both commits
+    std::unordered_set<std::string> allFiles;
     for (FileNode* f = commit1->files; f; f = f->next) allFiles.insert(f->filename);
     for (FileNode* f = commit2->files; f; f = f->next) allFiles.insert(f->filename);
     
-    //Here It comapres each files
     for (const auto& filename : allFiles) {
         std::string content1 = getFileContentAtCommit(filename, commit1->commitID);
         std::string content2 = getFileContentAtCommit(filename, commit2->commitID);
