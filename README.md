@@ -27,8 +27,8 @@ Our MiniGit supports the following commands
 
 ## The Data Structures we used
 
- **Linked List** → for tracking staged files
- **Custom nodes** → to store commit history
+ **Linked List** → for tracking staged files.
+ **Custom nodes** → to store commit history.
  **Unordered Sets/Maps** → used in `diff` and `merge` feautures.
 
  ---
